@@ -1,57 +1,73 @@
 import { useEffect, useState } from "react";
 import { View, Text, Image, TouchableHighlight } from "react-native";
-import { getCards } from "../../services/axiosClient";
+import { getDeckId, getCards } from "../../services/axiosClient";
 
 const Game = ({ route }) => {
 
-  const { deckId } = route.params;
+  var { deckId } = route.params;
   const [cards, setCards] = useState(null);
   const [total, setTotal] = useState(null);
   const botCount = 3;
   const [botCards, setBotCards] = useState(null);
   const [botTotal, setBotTotal] = useState(null);
+  const [botTotalFinal, setBotTotalFinal] = useState(null);
+  const [status, setStatus] = useState(0);
 
   const getCard = async () => {
     const get = async () => {
-      const deck = await getCards(deckId, 4);
-      var deckBot = [];
+      const deck = await getCards(deckId, botCount + 1);
+      var card = deck.cards[0]
 
-      for (var i = 0; i <= botCount; i++) {
-        var card = deck.cards[i]
-        if (i == 0) {
-          setCards([...cards, card]);
-          somarTotal(card.value);
-        } else {
-          if (i == 1) {
-            console.log([...botCards[i - 1], card]);
-            deckBot = [[...botCards[i - 1], card]];
-          } else {
-            console.log([...botCards[i - 1], card]);
-            deckBot = [...deckBot, [...botCards[i - 1], card]];
-          }
-        }
-      };
-      console.log(deckBot);
-      setBotCards(deckBot);
+      setCards([...cards, card]);
+      somarTotal(card.value);
     };
     get();
   }
 
   const finalizar = async () => {
-    const get = async () => {
-      alert("VOCÊ VENCEU!")
-    };
-    get();
+    ligarBots()
   }
 
-  //Inicio do jogo
-  useEffect(() => {
+  function resultado() {
+    var ganhador;
+    var maiorValor = 0;
+    var tipo = 0;
+
+    if (total <= 21) {
+      ganhador = "Você"
+      maiorValor = total
+      tipo = 1
+    }
+
+    for (var i = 0; i < botCount; i++) {
+      if (botTotalFinal[i] > maiorValor && botTotalFinal[i] <= 21) {
+        ganhador = "Bot " + (i + 1)
+        maiorValor = botTotalFinal[i]
+        tipo = 1
+      } else if (maiorValor == botTotalFinal[i]) {
+        ganhador = ganhador + " e Bot " + (i + 1)
+        tipo = 2
+      }
+    }
+
+    if (tipo == 0) {
+      alert("Todos jogadores perderam")
+    } else if (tipo == 2) {
+      alert("Os jogadores " + ganhador + " empataram")
+    } else {
+      alert("O jogador " + ganhador + " ganhou")
+    }
+  }
+
+  function startGame() {
     const get = async () => {
-      const deck = await getCards(deckId, 4);
+
+      const deck = await getCards(deckId, botCount + 1);
       var deckBot = [];
 
       for (var i = 0; i <= botCount; i++) {
         var card = deck.cards[i]
+
         if (i == 0) {
           setCards([card]);
           somarTotal(card.value);
@@ -65,20 +81,54 @@ const Game = ({ route }) => {
       };
 
       setBotCards(deckBot);
+      setStatus(1);
     }
     get();
-  }, []);
+  }
+
+  function restartGame() {
+    setCards(null);
+    setTotal(null);
+    setBotCards(null);
+    setBotTotal(null);
+    setBotTotalFinal(null);
+    setStatus(0);
+  }
 
   useEffect(() => {
-    console.log(botCards)
+    for (var i = 0; i < botCount; i++) {
+      if (botCards) {
+
+        var totalBotCards = 0;
+        for (var j = 0; j < botCards[i].length; j++) {
+          if (!totalBotCards) {
+            totalBotCards = [botCards[i][j].value];
+          } else {
+            totalBotCards = [...totalBotCards, botCards[i][j].value];
+          }
+        }
+
+        somarBotTotal(i, totalBotCards)
+      }
+    }
   }, [botCards]);
 
   useEffect(() => {
+    if (status == 2) {
+      resultado()
+    }
+  }, [botTotalFinal]);
+
+  useEffect(() => {
+    if (status == 0) {
+      startGame();
+    }
+  }, [status]);
+
+  useEffect(() => {
     if (total > 21) {
-      for (var i = 0; i <= botCount; i++) {
-        console.log(botCards)
-      }
       alert("VOCÊ PERDEU!")
+      finalizar()
     }
   }, [total]);
 
@@ -87,10 +137,93 @@ const Game = ({ route }) => {
     setTotal(total + value)
   }
 
+  function somarBotTotal(bot, value) {
+    var somarBot;
+
+    for (var i = 0; i < value.length; i++) {
+      value[i] = (value[i] == "ACE" && 1 || parseInt(value[i]) || 10)
+
+      if (!somarBot) {
+        somarBot = value[i];
+      } else {
+        somarBot = somarBot + value[i];
+      }
+    }
+
+    calculo(bot, somarBot)
+  }
+
+  var save = []
+  function calculo(bot, somarBot) {
+    if (bot == 0) {
+      save = [somarBot]
+    } else {
+      save = [...save, somarBot]
+    }
+
+    if (bot == botCount - 1) {
+      setBotTotal(save)
+    }
+  }
+
+  useEffect(() => {
+    setBotTotalFinal(botTotal)
+  }, [botTotal]);
+
+  function ligarBots() {
+    const get = async () => {
+      const deck = await getCards(deckId, botCount);
+      var deckBot;
+      var preCards;
+      var jogadasExtras;
+
+      for (var i = 0; i < botCount; i++) {
+        jogadasExtras = Math.floor(Math.random() * 2)
+        preCards = [...botCards[i], deck.cards[i]];
+
+        if (i == 0) {
+          for (var j = 1; j <= jogadasExtras; j++) {
+            const deckUn = await getCards(deckId, 1);
+            preCards = [...preCards, deckUn.cards[0]]
+          }
+
+          deckBot = [preCards];
+        } else {
+          for (var j = 1; j <= jogadasExtras; j++) {
+            const deckUn = await getCards(deckId, 1);
+            preCards = [...preCards, deckUn.cards[0]]
+          }
+
+          deckBot = [...deckBot, preCards];
+        }
+
+      };
+
+      setBotCards(deckBot);
+      setStatus(2)
+    };
+    get();
+  }
+
+  function placar() {
+    var text = "Eu: " + (total <= 21 && total || "Perdeu")
+    if (status == 2) {
+      for (var i = 0; i < botCount; i++) {
+        if (botTotal) {
+          text = text + "\nBot " + (i + 1) + ": " + (botTotal[i] <= 21 && botTotal[i] || "Perdeu")
+        } else {
+          text = text + "\nBot " + (i + 1) + ": 0"
+        }
+      }
+    }
+
+    return text
+  }
+
   return (
     <>
       <View>
-        <Text>Meus pontos: {total}</Text>
+        <Text>{placar()}</Text>
       </View>
       <View style={{ flexDirection: "row", padding: "5%", flexWrap: "wrap", justifyContent: "space-between" }}>
         {cards && cards.map((card) =>
@@ -104,16 +237,28 @@ const Game = ({ route }) => {
           </>
         )}
       </View>
-      <TouchableHighlight underlayColor='blue' onPress={getCard}>
+      <Text>Meus Pontos: {total}</Text>
+      {status == 1 &&
+        <>
+          <TouchableHighlight underlayColor='blue' onPress={getCard}>
+            <View>
+              <Text>Comprar carta</Text>
+            </View>
+          </TouchableHighlight>
+
+          <TouchableHighlight underlayColor='blue' onPress={finalizar}>
+            <View>
+              <Text>Parar</Text>
+            </View>
+          </TouchableHighlight>
+        </>
+      }
+
+      {status == 2 && <TouchableHighlight underlayColor='blue' onPress={restartGame}>
         <View>
-          <Text>Comprar carta</Text>
+          <Text>Reiniciar</Text>
         </View>
-      </TouchableHighlight>
-      <TouchableHighlight underlayColor='blue' onPress={finalizar}>
-        <View>
-          <Text>Parar</Text>
-        </View>
-      </TouchableHighlight>
+      </TouchableHighlight>}
     </>
   );
 };
