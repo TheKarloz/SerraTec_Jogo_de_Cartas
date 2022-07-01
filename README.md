@@ -2,10 +2,10 @@
 Api: https://deckofcardsapi.com/
 
 # Start
-![Defeat](https://github.com/TheKarloz/images/blob/main/game%2021%20-%20start.png)
+![Defeat](https://github.com/TheKarloz/SerraTec_Jogo_de_Cartas/blob/main/prints/start.png)
 
 # Victory
-![Defeat](https://github.com/TheKarloz/images/blob/main/game%2021%20-%20victory.png)
+![Defeat](https://github.com/TheKarloz/SerraTec_Jogo_de_Cartas/blob/main/prints/victory.png)
 
 # Defeat
-![Defeat](https://github.com/TheKarloz/images/blob/main/game%2021%20-%20defeat.png)
+![Defeat](https://github.com/TheKarloz/SerraTec_Jogo_de_Cartas/blob/main/prints/defeat.png)
