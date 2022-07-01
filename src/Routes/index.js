@@ -17,7 +17,7 @@ const Routes = () => {
         <Stack.Screen
           name="Game"
           component={Game}
-          options={{ title: "Título da Página" }}
+          options={{ title: "Jogo do 21" }}
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -12,6 +12,7 @@ const Game = ({ route }) => {
   const [botTotal, setBotTotal] = useState(null);
   const [botTotalFinal, setBotTotalFinal] = useState(null);
   const [status, setStatus] = useState(0);
+  const [msg, setMsg] = useState(null);
 
   const getCard = async () => {
     const get = async () => {
@@ -51,11 +52,11 @@ const Game = ({ route }) => {
     }
 
     if (tipo == 0) {
-      alert("Todos jogadores perderam")
+      setMsg("Todos jogadores perderam")
     } else if (tipo == 2) {
-      alert("Os jogadores " + ganhador + " empataram")
+      setMsg("Os jogadores " + ganhador + " empataram")
     } else {
-      alert("O jogador " + ganhador + " ganhou")
+      setMsg("O jogador " + ganhador + " ganhou")
     }
   }
 
@@ -215,6 +216,7 @@ const Game = ({ route }) => {
           text = text + "\nBot " + (i + 1) + ": 0"
         }
       }
+      text = text + "\n\n=> " + msg + " <="
     }
 
     return text
